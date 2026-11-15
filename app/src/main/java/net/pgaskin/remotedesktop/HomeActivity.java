@@ -41,8 +41,7 @@ import java.util.Set;
 /**
  * The home screen, in the style of the Windows App: a header (settings, title,
  * add), the view-mode button and a collapsible section title, the saved
- * connections, and a bottom bar that switches between all of them (Devices)
- * and the pinned ones (Favorites).
+ * connections, and a bottom bar with Devices and Settings.
  *
  * <p>An item is a card or a row, chosen from the header and remembered. Cards let
  * the user recognise a machine by its screen; rows make it easier to find one
@@ -64,9 +63,6 @@ public final class HomeActivity extends AppCompatActivity {
 
     /** Rows rather than cards. Persisted, because it is a preference and not a mode. */
     private boolean listView;
-
-    /** The Favorites tab: only the pinned connections. Devices shows them all. */
-    private boolean favoritesOnly;
 
     /** The section's list is folded away, as the Windows App's section header can. */
     private boolean collapsed;
@@ -94,7 +90,6 @@ public final class HomeActivity extends AppCompatActivity {
         sectionTitle = findViewById(R.id.section_title);
         sectionChevron = findViewById(R.id.section_chevron);
         nav = findViewById(R.id.nav);
-        favoritesOnly = savedInstanceState != null && savedInstanceState.getBoolean("favorites");
         collapsed = savedInstanceState != null && savedInstanceState.getBoolean("collapsed");
         findViewById(R.id.add).setOnClickListener(v -> addConnection());
         empty.findViewById(R.id.playground).setOnClickListener(
@@ -138,7 +133,6 @@ public final class HomeActivity extends AppCompatActivity {
             out.putBundle("editor", editor.saveState());
         }
         out.putBoolean("reorder", reorder != null && reorder.isShowing());
-        out.putBoolean("favorites", favoritesOnly);
         out.putBoolean("collapsed", collapsed);
     }
 
@@ -248,7 +242,7 @@ public final class HomeActivity extends AppCompatActivity {
         });
         showViewMode();
 
-        nav.setSelectedItemId(favoritesOnly ? R.id.nav_favorites : R.id.nav_devices);
+        nav.setSelectedItemId(R.id.nav_devices);
         nav.setOnItemSelectedListener(item -> {
             final int id = item.getItemId();
             if (id == R.id.nav_settings) {
@@ -257,9 +251,6 @@ public final class HomeActivity extends AppCompatActivity {
                 // showing the list that is still behind it.
                 return false;
             }
-            favoritesOnly = id == R.id.nav_favorites;
-            showSection();
-            adapter.reload();
             return true;
         });
         showSection();
@@ -269,16 +260,11 @@ public final class HomeActivity extends AppCompatActivity {
         startActivity(new Intent(this, SettingsActivity.class));
     }
 
-    /** The section title and the empty state's wording follow the selected tab. */
     private void showSection() {
-        sectionTitle.setText(favoritesOnly
-                ? R.string.home_section_favorites : R.string.home_section_devices);
-        ((TextView) empty.findViewById(R.id.empty_title)).setText(favoritesOnly
-                ? R.string.home_empty_favorites_title : R.string.home_empty_title);
-        ((TextView) empty.findViewById(R.id.empty_body)).setText(favoritesOnly
-                ? R.string.home_empty_favorites : R.string.home_empty);
-        empty.findViewById(R.id.playground).setVisibility(
-                favoritesOnly ? View.GONE : View.VISIBLE);
+        sectionTitle.setText(R.string.home_section_devices);
+        ((TextView) empty.findViewById(R.id.empty_title)).setText(R.string.home_empty_title);
+        ((TextView) empty.findViewById(R.id.empty_body)).setText(R.string.home_empty);
+        empty.findViewById(R.id.playground).setVisibility(View.VISIBLE);
     }
 
     /** Folds the list away or shows it again, and turns the chevron to match. */
@@ -435,9 +421,7 @@ public final class HomeActivity extends AppCompatActivity {
         void reload() {
             items.clear();
             for (Connection c : Connections.all(HomeActivity.this)) {
-                if (!favoritesOnly || c.pinned()) {
-                    items.add(c);
-                }
+                items.add(c);
             }
             // Based on the connections alone: "no connections" is still true
             // with a plugin card above it, and setting up a plugin is often

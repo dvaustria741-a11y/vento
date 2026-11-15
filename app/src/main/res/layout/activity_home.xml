@@ -121,8 +121,7 @@
             android:scrollbars="none" />
 
         <!--
-            No connections to show: none saved, or none pinned on the Favorites
-            tab. The texts are set from HomeActivity, since they differ.
+            No connections saved. The texts are set from HomeActivity.
         -->
         <LinearLayout
             android:id="@+id/empty"
