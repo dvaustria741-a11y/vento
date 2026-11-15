@@ -40,7 +40,6 @@
         <item name="colorOnSurfaceVariant">@color/palette_on_surface_variant</item>
         <item name="colorSurfaceInverse">@color/palette_on_surface</item>
         <item name="colorOnSurfaceInverse">@color/palette_surface</item>
-        <item name="colorSurfaceTint">@android:color/transparent</item>
         <item name="colorOutline">@color/palette_outline</item>
         <item name="colorOutlineVariant">@color/palette_outline_variant</item>
 
