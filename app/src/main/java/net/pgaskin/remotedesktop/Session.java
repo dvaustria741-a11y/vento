@@ -6,6 +6,8 @@ package net.pgaskin.remotedesktop;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -632,7 +634,38 @@ public final class Session implements Backend.Listener, Prompt.Handler {
     @Override
     public void clipboardFromRemote(String text) {
         assertMain("clipboardFromRemote");
-        view.clipboardFromRemote(text);
+        final Backend.Listener v = view;
+        if (v == NOBODY) {
+            clipboardFromRemoteDetached(text);
+            return;
+        }
+        v.clipboardFromRemote(text);
+    }
+
+    /**
+     * Main thread. A copy made on the remote while no screen is attached, such
+     * as after the activity was left with Back while the service keeps the
+     * session alive. The view's {@code SessionClipboard} applies a copy
+     * normally, but is gone, and the remote announces a copy only once, so
+     * dropping it here would lose it for good. Writing the clipboard has no
+     * focus requirement (only reading does), and the setting is the same one
+     * the view honours.
+     */
+    private void clipboardFromRemoteDetached(String text) {
+        if (text == null || text.isEmpty() || !AppSettings.clipboardIn(context)) {
+            return;
+        }
+        final ClipboardManager cm = context.getSystemService(ClipboardManager.class);
+        if (cm == null) {
+            return;
+        }
+        try {
+            cm.setPrimaryClip(ClipData.newPlainText(null, text));
+        } catch (RuntimeException e) {
+            // A refused write (a work profile, a device policy) must not end
+            // the session.
+            Log.w("Session", "cannot set the clipboard with no screen attached", e);
+        }
     }
 
     @Override
