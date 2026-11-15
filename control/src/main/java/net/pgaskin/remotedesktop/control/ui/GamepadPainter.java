@@ -84,11 +84,17 @@ public final class GamepadPainter {
     }
 
     private void drawButton(Canvas c, GamepadOverlay.Item it, boolean down, float x, float y, float r) {
-        final Bitmap body = skin.get(down ? "button_pressed" : "button_idle");
-        if (body != null) {
-            blit(c, body, x, y, r);
+        // The pressed art is an overlay (a glowing ring), so the resting body
+        // is always drawn under it.
+        final Bitmap idle = skin.get("button_idle");
+        final Bitmap pressed = down ? skin.get("button_pressed") : null;
+        if (idle != null) {
+            blit(c, idle, x, y, r);
         } else {
-            body(c, down, x, y, r);
+            body(c, down && pressed == null, x, y, r);
+        }
+        if (pressed != null) {
+            blit(c, pressed, x, y, r);
         }
         final Bitmap icon = it.icon() == null ? null : skin.get(it.icon());
         if (icon != null) {

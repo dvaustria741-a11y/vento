@@ -7,7 +7,7 @@ diameter, so square 256x256 is plenty.
 | File | Used for |
 |---|---|
 | button_idle.png | every key/mouse/wheel button at rest |
-| button_pressed.png | the same while held |
+| button_pressed.png | drawn over button_idle while held (an overlay such as a glowing ring, not a full button) |
 | stick_base.png | the WASD stick's base disc |
 | stick_knob.png | the stick's thumb |
 | menu.png | menu button glyph |
