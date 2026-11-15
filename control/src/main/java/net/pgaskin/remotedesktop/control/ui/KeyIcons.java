@@ -64,6 +64,7 @@ final class KeyIcons {
     static final String KEYBOARD = "keyboard";
     static final String MOUSE = "mouse";
     static final String GRIP = "grip";
+    static final String GAMEPAD = "gamepad";
 
     private static final Map<String, Icon> CACHE = new HashMap<>();
 
@@ -103,6 +104,7 @@ final class KeyIcons {
             case KEYBOARD -> new Icon(keyboard(), 0.09f);
             case MOUSE -> new Icon(mouse(), 0.09f);
             case GRIP -> new Icon(grip(), 0.09f);
+            case GAMEPAD -> new Icon(gamepad(), 0.09f);
             default -> null;
         };
     }
@@ -308,6 +310,21 @@ final class KeyIcons {
         p.addRoundRect(r, 0.22f, 0.22f, Path.Direction.CW);
         p.moveTo(0.50f, 0.22f);
         p.lineTo(0.50f, 0.38f);
+        return p;
+    }
+
+    /** A game controller: a rounded body, a cross on the left and two buttons on the right. */
+    private static Path gamepad() {
+        final Path p = new Path();
+        p.addRoundRect(new RectF(0.04f, 0.26f, 0.96f, 0.76f), 0.22f, 0.22f, Path.Direction.CW);
+        p.moveTo(0.26f, 0.40f);
+        p.lineTo(0.26f, 0.62f);
+        p.moveTo(0.15f, 0.51f);
+        p.lineTo(0.37f, 0.51f);
+        p.moveTo(0.66f, 0.46f);
+        p.lineTo(0.68f, 0.46f);
+        p.moveTo(0.78f, 0.56f);
+        p.lineTo(0.80f, 0.56f);
         return p;
     }
 

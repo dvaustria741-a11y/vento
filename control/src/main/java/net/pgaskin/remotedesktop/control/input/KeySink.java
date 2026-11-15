@@ -51,6 +51,9 @@ public interface KeySink {
      */
     int ID_TEXT = 0x0003_0000;
 
+    /** {@link GamepadOverlay}, plus the button's index in its layout. */
+    int ID_GAMEPAD = 0x0004_0000;
+
     void keyDown(int keysym, int keyId);
 
     void keyUp(int keyId);

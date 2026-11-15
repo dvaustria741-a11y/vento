@@ -7,6 +7,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.os.Build;
@@ -36,6 +37,7 @@ import net.pgaskin.remotedesktop.control.input.AndroidScheduler;
 import net.pgaskin.remotedesktop.control.input.Button;
 import net.pgaskin.remotedesktop.control.input.Config;
 import net.pgaskin.remotedesktop.control.input.ExtensionKeyboard;
+import net.pgaskin.remotedesktop.control.input.GamepadOverlay;
 import net.pgaskin.remotedesktop.control.input.GestureRecognizer;
 import net.pgaskin.remotedesktop.control.input.KeySink;
 import net.pgaskin.remotedesktop.control.input.MouseOverlay;
@@ -47,8 +49,11 @@ import net.pgaskin.remotedesktop.control.input.Toolbar;
 import net.pgaskin.remotedesktop.control.input.TouchRouter;
 import net.pgaskin.remotedesktop.control.input.ZoomSink;
 import net.pgaskin.remotedesktop.control.ui.Chrome;
+import net.pgaskin.remotedesktop.control.ui.GamepadPainter;
 import net.pgaskin.remotedesktop.control.ui.TextInput;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -77,7 +82,7 @@ import java.util.Set;
 public final class SessionView extends View implements ZoomSink, CursorController.Listener,
         CursorController.PointerSink, RegionSink, Backend.Listener, KeySink,
         MouseOverlay.Listener, ExtensionKeyboard.Listener, Toolbar.Listener,
-        PhysicalMouse.Listener, PhysicalKeyboard.Listener {
+        PhysicalMouse.Listener, PhysicalKeyboard.Listener, GamepadOverlay.Listener {
 
     public interface Host {
         /** A tap in the {@code disconnect} region. */
@@ -168,6 +173,8 @@ public final class SessionView extends View implements ZoomSink, CursorControlle
     private final MouseOverlay overlay;
     private final ExtensionKeyboard keyboard;
     private final Toolbar toolbar;
+    private final GamepadOverlay gamepad;
+    private final GamepadPainter gamepadPainter;
     private final PhysicalMouse mouse;
     private final PhysicalKeyboard keys;
     private final Chrome chrome;
@@ -286,6 +293,14 @@ public final class SessionView extends View implements ZoomSink, CursorControlle
         toolbar.setItems(Toolbar.standard());
         toolbar.setPosition(AppSettings.toolbarPosition(ctx));
         router.addClaim(toolbar);
+        // After the toolbar, so that wherever the two overlap the toolbar wins.
+        // Its own button source, for the same reason as the overlay's.
+        gamepad = new GamepadOverlay(this, cursor.newButtonSource(), scheduler);
+        gamepad.setItems(GamepadOverlay.standard());
+        gamepad.setListener(this);
+        router.addClaim(gamepad);
+        gamepadPainter = new GamepadPainter(cfg);
+        loadGamepadSkin(ctx);
         // A third button source, for the same reason the overlay has its own: a
         // mouse holding LEFT while a finger taps the touchpad must not have its
         // button released by the tap's 250 ms click window.
@@ -621,6 +636,7 @@ public final class SessionView extends View implements ZoomSink, CursorControlle
         router.cancel(now);
         gestures.cancelAll(now);
         keyboard.clearModifiers();
+        gamepad.releaseAll();
         // Not touches, but the same problem: a mouse button or key held when
         // the session leaves the screen never gets its release either.
         mouse.cancel();
@@ -635,6 +651,7 @@ public final class SessionView extends View implements ZoomSink, CursorControlle
         overlay.setViewSize(w, h);
         keyboard.setViewSize(w, h);
         toolbar.setViewSize(w, h);
+        gamepad.setViewSize(w, h);
         place();
         // On any window size change rather than only orientation changes: a
         // split screen being resized needs the same, and this activity handles
@@ -1125,11 +1142,49 @@ public final class SessionView extends View implements ZoomSink, CursorControlle
                 }
                 softInput.toggleKeyboard();
             }
+            case Toolbar.GAMEPAD -> {
+                if (backend.viewOnly()) {
+                    return false;
+                }
+                gamepad.setVisible(!gamepad.visible());
+                syncToolbarState();
+                invalidate();
+            }
             default -> {
                 return false;
             }
         }
         return true;
+    }
+
+    // ---- GamepadOverlay.Listener -------------------------------------------
+
+    @Override
+    public void gamepadChanged() {
+        invalidate();
+    }
+
+    @Override
+    public void gamepadMenu() {
+        lastRegion = "gamepad-menu";
+        host.informationRequested();
+    }
+
+    /**
+     * Optional skin art from {@code assets/gamepad/<name>.png}; each missing
+     * file leaves the procedural look for that part. See
+     * {@code app/src/main/assets/gamepad/README.md} for the names.
+     */
+    private void loadGamepadSkin(Context ctx) {
+        final String[] names = {"button_idle", "button_pressed", "stick_base", "stick_knob",
+                "menu", "wheel_up", "wheel_down", "mouse_left", "mouse_right", "mouse_middle"};
+        for (String n : names) {
+            try (InputStream in = ctx.getAssets().open("gamepad/" + n + ".png")) {
+                gamepadPainter.setSkin(n, BitmapFactory.decodeStream(in));
+            } catch (IOException ignored) {
+                // Not supplied.
+            }
+        }
     }
 
     // ---- Toolbar.Listener --------------------------------------------------
@@ -1189,9 +1244,15 @@ public final class SessionView extends View implements ZoomSink, CursorControlle
      * info bar shows an armed modifier.
      */
     private void syncToolbarState() {
-        toolbar.setItems(backend.viewOnly()
-                ? List.of(Toolbar.standard().get(0), Toolbar.standard().get(1))
-                : Toolbar.standard());
+        if (backend.viewOnly()) {
+            gamepad.setVisible(false);
+            toolbar.setItems(List.of(Toolbar.standard().get(0), Toolbar.standard().get(1)));
+        } else {
+            final List<Toolbar.Item> all = new ArrayList<>(Toolbar.standard());
+            all.add(new Toolbar.Item(Toolbar.GAMEPAD, "gamepad"));
+            toolbar.setItems(all);
+        }
+        toolbar.setActive(Toolbar.GAMEPAD, gamepad.visible());
         toolbar.setActive(TapRegions.MOUSE, overlay.visible());
         toolbar.setActive(TapRegions.KEYBOARD, keyboard.visible());
     }
@@ -1244,6 +1305,7 @@ public final class SessionView extends View implements ZoomSink, CursorControlle
         if (keyboard.visible() && chrome.drawKeyboard(c, keyboard, getWidth(), cursor.screenY())) {
             postInvalidateOnAnimation();
         }
+        gamepadPainter.draw(c, gamepad);
         if (chrome.drawToolbar(c, toolbar, getWidth(), getHeight(),
                 cursor.screenX(), cursor.screenY())) {
             postInvalidateOnAnimation();

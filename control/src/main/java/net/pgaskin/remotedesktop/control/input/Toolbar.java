@@ -106,6 +106,9 @@ public final class Toolbar implements TouchRouter.Claim {
      * The four the tap regions already declare, in the order a column of them
      * reads; what each one does is up to the host.
      */
+    /** The host's word for the gamepad button, which is not among {@link #standard()}. */
+    public static final String GAMEPAD = "gamepad";
+
     public static List<Item> standard() {
         return List.of(
                 new Item(TapRegions.DISCONNECT, "disconnect"),
