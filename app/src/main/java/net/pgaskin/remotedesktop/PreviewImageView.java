@@ -9,21 +9,21 @@ import android.util.AttributeSet;
 import androidx.appcompat.widget.AppCompatImageView;
 
 /**
- * The desktop preview on a home card: as wide as the column, and a fixed
+ * The desktop preview on a home card: as wide as the card, and a fixed
  * fraction of that tall.
  *
- * <p>The cards are in a grid, so the picture cannot have a height in dp: the
- * column width depends on how many columns fit on the screen. It has a ratio
- * instead, chosen so that the picture plus the two lines of text under it is
- * roughly square at any column width.
+ * <p>The card width depends on the screen and the column count, so the picture
+ * cannot have a height in dp: it has a ratio, 16:10, a little taller than a
+ * widescreen desktop so that the name and address over its lower edge do not
+ * cover much of it.
  *
  * <p>Deliberately not the desktop's own aspect ratio: a 16:10 card beside a 4:3
  * one would look like two sizes of card rather than two desktops.
  */
 public final class PreviewImageView extends AppCompatImageView {
 
-    /** Height as a fraction of width. Leaves the card a little taller than wide. */
-    private static final float RATIO = 0.72f;
+    /** Height as a fraction of width. */
+    private static final float RATIO = 0.625f;
 
     public PreviewImageView(Context context) {
         super(context);

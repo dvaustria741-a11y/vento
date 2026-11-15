@@ -17,7 +17,7 @@
 <com.google.android.material.textfield.TextInputLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/field"
-    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+    style="@style/Widget.RemoteDesktop.TextInputLayout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 

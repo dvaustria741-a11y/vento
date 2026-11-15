@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    SPDX-FileCopyrightText: 2026 Patrick Gaskin
+    SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<!-- Light palette: no reference exists for it, so it is this file's own choice. -->
+<resources>
+    <color name="palette_primary">#0f6cbd</color>
+    <color name="palette_on_primary">#ffffff</color>
+    <color name="palette_primary_container">#cfe4fa</color>
+    <color name="palette_on_primary_container">#0c3b5e</color>
+    <color name="palette_surface">#ffffff</color>
+    <color name="palette_on_surface">#1a1a1a</color>
+    <color name="palette_on_surface_variant">#5c5c5c</color>
+    <color name="palette_container_high">#f0f0f0</color>
+    <color name="palette_container_highest">#e8e8e8</color>
+    <color name="palette_outline">#8a8a8a</color>
+    <color name="palette_outline_variant">#d1d1d1</color>
+    <color name="palette_error">#b10e1c</color>
+    <color name="palette_on_error">#ffffff</color>
+    <color name="palette_switch_thumb_off">#6b6b6b</color>
+    <color name="palette_switch_track_off">#d6d6d6</color>
+</resources>

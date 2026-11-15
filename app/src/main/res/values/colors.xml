@@ -11,4 +11,11 @@
 <resources>
     <color name="session_panel">#cc101418</color>
     <color name="session_ink">#ffe8f0ff</color>
+
+    <!-- The desktop preview's stand-in before the first screenshot exists, and
+         the scrim under the text on a card. Fixed for the same reason: both
+         sit behind white text over something of unknown brightness. -->
+    <color name="preview_placeholder_start">#ff071842</color>
+    <color name="preview_placeholder_end">#ff2563eb</color>
+    <color name="preview_scrim_end">#cc000000</color>
 </resources>

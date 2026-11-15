@@ -23,7 +23,9 @@
         android:paddingTop="@dimen/heading_padding_top"
         android:paddingEnd="@dimen/heading_inset"
         android:paddingBottom="@dimen/heading_padding_bottom"
-        android:textAppearance="?attr/textAppearanceTitleSmall"
+        android:textAppearance="?attr/textAppearanceTitleMedium"
+        android:textSize="20sp"
+        android:textStyle="bold"
         android:textColor="?attr/colorPrimary" />
 
 </LinearLayout>

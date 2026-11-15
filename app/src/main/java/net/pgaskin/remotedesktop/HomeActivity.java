@@ -9,9 +9,9 @@ import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -24,10 +24,9 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.color.MaterialColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import net.pgaskin.remotedesktop.backend.Backend;
 import net.pgaskin.remotedesktop.backend.Backends;
@@ -40,10 +39,12 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The home screen: one saved connection per item, plus the add button and the
- * bar's actions.
+ * The home screen, in the style of the Windows App: a header (settings, title,
+ * add), the view-mode button and a collapsible section title, the saved
+ * connections, and a bottom bar that switches between all of them (Devices)
+ * and the pinned ones (Favorites).
  *
- * <p>An item is a card or a row, chosen from the bar and remembered. Cards let
+ * <p>An item is a card or a row, chosen from the header and remembered. Cards let
  * the user recognise a machine by its screen; rows make it easier to find one
  * among twenty, since a name and address on their own line are easier to read.
  * Both use the same bind (the two layouts share their ids), so the mode only
@@ -54,20 +55,21 @@ public final class HomeActivity extends AppCompatActivity {
 
     private RecyclerView list;
     private View empty;
-    private MaterialToolbar toolbar;
-    private FloatingActionButton add;
+    private ImageButton reorderButton;
+    private ImageButton viewModeButton;
+    private TextView sectionTitle;
+    private View sectionChevron;
+    private BottomNavigationView nav;
     private final Adapter adapter = new Adapter();
 
     /** Rows rather than cards. Persisted, because it is a preference and not a mode. */
     private boolean listView;
 
-    /**
-     * The bar's own height, without the status bar: the theme's
-     * {@code actionBarSize}, read from the layout rather than resolved again
-     * here, since every other header uses that same attribute and Material 3's
-     * value differs from appcompat's.
-     */
-    private int barHeight;
+    /** The Favorites tab: only the pinned connections. Devices shows them all. */
+    private boolean favoritesOnly;
+
+    /** The section's list is folded away, as the Windows App's section header can. */
+    private boolean collapsed;
 
     /** The editor, while one is open; a dialog does not survive a rotation. */
     private ConnectionEditorPanel editor;
@@ -85,16 +87,20 @@ public final class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         setContentView(R.layout.activity_home);
-        toolbar = findViewById(R.id.toolbar);
         list = findViewById(R.id.list);
         empty = findViewById(R.id.empty);
-        add = findViewById(R.id.add);
-        add.setOnClickListener(v -> addConnection());
+        reorderButton = findViewById(R.id.reorder);
+        viewModeButton = findViewById(R.id.view_mode);
+        sectionTitle = findViewById(R.id.section_title);
+        sectionChevron = findViewById(R.id.section_chevron);
+        nav = findViewById(R.id.nav);
+        favoritesOnly = savedInstanceState != null && savedInstanceState.getBoolean("favorites");
+        collapsed = savedInstanceState != null && savedInstanceState.getBoolean("collapsed");
+        findViewById(R.id.add).setOnClickListener(v -> addConnection());
         empty.findViewById(R.id.playground).setOnClickListener(
                 v -> startActivity(new Intent(this, PlaygroundActivity.class)));
 
         listView = AppSettings.listView(this);
-        barHeight = toolbar.getLayoutParams().height;
         final GridLayoutManager grid = new GridLayoutManager(this, spanCount());
         // A plugin's card is a notice rather than a list item, so it takes the
         // whole width regardless of the view mode and column count.
@@ -110,9 +116,8 @@ public final class HomeActivity extends AppCompatActivity {
         // the other would only distract.
         list.setItemAnimator(null);
         list.setAdapter(adapter);
-        liftToolbarOnScroll();
         applyInsets();
-        setUpToolbar();
+        setUpHeader();
 
         // An editor open across a rotation: the dialog was destroyed with the
         // window, and the form's contents are in the bundle.
@@ -133,6 +138,8 @@ public final class HomeActivity extends AppCompatActivity {
             out.putBundle("editor", editor.saveState());
         }
         out.putBoolean("reorder", reorder != null && reorder.isShowing());
+        out.putBoolean("favorites", favoritesOnly);
+        out.putBoolean("collapsed", collapsed);
     }
 
     @Override
@@ -182,14 +189,10 @@ public final class HomeActivity extends AppCompatActivity {
     }
 
     /**
-     * As many columns of about 240 dp as fit, and never fewer than two: a
-     * roughly square card is scanned rather than read, and one per row on a
-     * phone would be a very large button.
-     *
-     * <p>240 rather than 190, because with rounding, 190 gives a third column
-     * from 475 dp, which several ordinary phones are, and three cards across a
-     * phone are too small to show the desktop. A third column needs 600 dp (a
-     * tablet or an unfolded foldable); until then the cards grow.
+     * As many columns of about 360 dp as fit, and at least one: a card is wide
+     * and shows the desktop at a size that can be recognised, as the Windows
+     * App's does, so a phone gets one column and a tablet or an unfolded
+     * foldable gets two or three.
      *
      * <p>A row is read left to right, so it needs twice the width and can be
      * the only thing across a phone: 480 dp gives a second column only on a
@@ -200,104 +203,96 @@ public final class HomeActivity extends AppCompatActivity {
         final float dp = getResources().getDisplayMetrics().widthPixels
                 / getResources().getDisplayMetrics().density;
         return listView ? Math.max(1, Math.round(dp / 480f))
-                : Math.max(2, Math.round(dp / 240f));
+                : Math.max(1, Math.round(dp / 360f));
     }
 
-    /**
-     * The padding either side of the list: 8 dp for cards, which add their own
-     * 8 dp margin, and zero for rows, which get the same 16 dp group inset as
-     * every other group of rows in this app.
-     */
+    /** The padding either side of the list, for cards and rows alike. */
     private int listSidePadding() {
-        return listView ? 0 : Math.round(8 * getResources().getDisplayMetrics().density);
+        return getResources().getDimensionPixelSize(R.dimen.home_inset);
     }
 
-    /** 8 dp under the bar for rows; a card's own margin provides it for cards. */
+    /** A little air under the section title; a card's own margin adds the rest. */
     private int listTopPadding() {
-        return listView ? Math.round(8 * getResources().getDisplayMetrics().density) : 0;
+        return Math.round(4 * getResources().getDisplayMetrics().density);
     }
 
     /**
-     * The list scrolls behind the bar, so its padding, not the layout, keeps the
-     * first card clear of it.
+     * The system bars: the root is padded at the top and the sides, so the
+     * header is clear of the status bar. The bottom bar is left to the
+     * navigation view, which pads itself by the bottom inset and draws its own
+     * background under the gesture area; the insets are returned unconsumed so
+     * that it receives them.
      */
     private void applyInsets() {
+        list.setPadding(listSidePadding(), listTopPadding(), listSidePadding(),
+                Math.round(8 * getResources().getDisplayMetrics().density));
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.root), (v, insets) -> {
             final Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            // The bar's own end padding, because menu items are not content: a
-            // toolbar's content inset moves the title but not the buttons, which
-            // are laid out from its padding. 8 dp mirrors the title's inset for
-            // the last icon, whose cell is 12 dp wider than the glyph on each
-            // side.
-            final int menuInset = Math.round(8 * getResources().getDisplayMetrics().density);
-            toolbar.setPadding(bars.left, bars.top, bars.right + menuInset, 0);
-            toolbar.getLayoutParams().height = bars.top + barHeight;
-            // The FAB sits over the list, so the bottom padding includes its
-            // height and margins as well as the navigation bar; otherwise the
-            // button would cover the last item.
-            final int fab = Math.round(72 * getResources().getDisplayMetrics().density);
-            list.setPadding(listSidePadding(),
-                    toolbar.getLayoutParams().height + listTopPadding(),
-                    listSidePadding(), bars.bottom + fab);
-            final ViewGroup.MarginLayoutParams lp =
-                    (ViewGroup.MarginLayoutParams) add.getLayoutParams();
-            final int margin = Math.round(16 * getResources().getDisplayMetrics().density);
-            lp.bottomMargin = bars.bottom + margin;
-            lp.rightMargin = bars.right + margin;
-            lp.leftMargin = bars.left + margin;
-            add.setLayoutParams(lp);
+            v.setPadding(bars.left, bars.top, bars.right, 0);
             return insets;
         });
     }
 
-    /**
-     * The bar gets its shadow as soon as anything is behind it. Its background
-     * is the window's, so at rest nothing needs separating, and once a card has
-     * scrolled under it, the shadow is the only sign of it.
-     */
-    private void liftToolbarOnScroll() {
-        final float lifted = getResources().getDisplayMetrics().density * 4f;
-        list.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrolled(@NonNull RecyclerView v, int dx, int dy) {
-                toolbar.setElevation(v.canScrollVertically(-1) ? lifted : 0f);
-            }
+    // ---- the header and the bottom bar -----------------------------------------
+
+    private void setUpHeader() {
+        // The round button is the Windows App's account button; here it opens
+        // settings, which the bottom bar also does, so there is no second
+        // place to look for them.
+        findViewById(R.id.avatar).setOnClickListener(v -> openSettings());
+        viewModeButton.setOnClickListener(v -> toggleViewMode());
+        reorderButton.setOnClickListener(v -> reorderPinned());
+        findViewById(R.id.section).setOnClickListener(v -> {
+            collapsed = !collapsed;
+            applySection();
         });
-    }
-
-    // ---- the toolbar --------------------------------------------------------
-
-    private void setUpToolbar() {
-        toolbar.setNavigationIcon(null);
-        toolbar.setTitle(R.string.app_name);
-        toolbar.setBackgroundColor(MaterialColors.getColor(toolbar,
-                com.google.android.material.R.attr.colorSurfaceContainer));
-        toolbar.getMenu().clear();
-        toolbar.inflateMenu(R.menu.home);
         showViewMode();
-        toolbar.setOnMenuItemClickListener(item -> {
+
+        nav.setSelectedItemId(favoritesOnly ? R.id.nav_favorites : R.id.nav_devices);
+        nav.setOnItemSelectedListener(item -> {
             final int id = item.getItemId();
-            if (id == R.id.action_view_mode) {
-                toggleViewMode();
-                return true;
+            if (id == R.id.nav_settings) {
+                openSettings();
+                // Not selected: settings is another screen, and the bar keeps
+                // showing the list that is still behind it.
+                return false;
             }
-            if (id == R.id.action_reorder) {
-                reorderPinned();
-                return true;
-            }
-            if (id == R.id.action_settings) {
-                startActivity(new Intent(this, SettingsActivity.class));
-                return true;
-            }
-            return false;
+            favoritesOnly = id == R.id.nav_favorites;
+            showSection();
+            adapter.reload();
+            return true;
         });
+        showSection();
     }
 
-    /** The button shows and is titled with the mode it switches to. */
+    private void openSettings() {
+        startActivity(new Intent(this, SettingsActivity.class));
+    }
+
+    /** The section title and the empty state's wording follow the selected tab. */
+    private void showSection() {
+        sectionTitle.setText(favoritesOnly
+                ? R.string.home_section_favorites : R.string.home_section_devices);
+        ((TextView) empty.findViewById(R.id.empty_title)).setText(favoritesOnly
+                ? R.string.home_empty_favorites_title : R.string.home_empty_title);
+        ((TextView) empty.findViewById(R.id.empty_body)).setText(favoritesOnly
+                ? R.string.home_empty_favorites : R.string.home_empty);
+        empty.findViewById(R.id.playground).setVisibility(
+                favoritesOnly ? View.GONE : View.VISIBLE);
+    }
+
+    /** Folds the list away or shows it again, and turns the chevron to match. */
+    private void applySection() {
+        list.setVisibility(collapsed ? View.GONE : View.VISIBLE);
+        empty.setVisibility(!collapsed && adapter.items.isEmpty() ? View.VISIBLE : View.GONE);
+        sectionChevron.setRotation(collapsed ? -90f : 0f);
+    }
+
+    /** The button shows and is described by the mode it switches to. */
     private void showViewMode() {
-        final MenuItem item = toolbar.getMenu().findItem(R.id.action_view_mode);
-        item.setIcon(listView ? R.drawable.ic_view_grid : R.drawable.ic_view_list);
-        item.setTitle(listView ? R.string.home_view_grid : R.string.home_view_list);
+        viewModeButton.setImageResource(listView ? R.drawable.ic_view_grid : R.drawable.ic_view_list);
+        viewModeButton.setContentDescription(getString(
+                listView ? R.string.home_view_grid : R.string.home_view_list));
     }
 
     /**
@@ -317,7 +312,7 @@ public final class HomeActivity extends AppCompatActivity {
             }
             pinned++;
         }
-        toolbar.getMenu().findItem(R.id.action_reorder).setVisible(pinned > 1);
+        reorderButton.setVisibility(pinned > 1 ? View.VISIBLE : View.GONE);
     }
 
     /**
@@ -338,9 +333,6 @@ public final class HomeActivity extends AppCompatActivity {
         AppSettings.setListView(this, listView);
         showViewMode();
         grid.setSpanCount(spanCount());
-        list.setPadding(listSidePadding(),
-                toolbar.getLayoutParams().height + listTopPadding(),
-                listSidePadding(), list.getPaddingBottom());
         adapter.notifyDataSetChanged();
         if (firstVisible != RecyclerView.NO_POSITION) {
             grid.scrollToPosition(firstVisible);
@@ -442,11 +434,15 @@ public final class HomeActivity extends AppCompatActivity {
         @SuppressLint("NotifyDataSetChanged")
         void reload() {
             items.clear();
-            items.addAll(Connections.all(HomeActivity.this));
+            for (Connection c : Connections.all(HomeActivity.this)) {
+                if (!favoritesOnly || c.pinned()) {
+                    items.add(c);
+                }
+            }
             // Based on the connections alone: "no connections" is still true
             // with a plugin card above it, and setting up a plugin is often
             // the first thing to do.
-            empty.setVisibility(items.isEmpty() ? View.VISIBLE : View.GONE);
+            applySection();
             // Whether there is an order to change depends on the list, so it is
             // updated whenever the list is read.
             showReorder();
@@ -551,22 +547,20 @@ public final class HomeActivity extends AppCompatActivity {
                 h.preview.setImageTintList(null);
                 h.preview.setScaleType(ImageView.ScaleType.CENTER_CROP);
             } else {
-                // No preview yet: the band's own colour and one faint icon at
-                // its natural size in the middle. CENTER, not the CENTER_CROP a
-                // preview uses: cropping the glyph to fill the band leaves two
-                // grey bars that are not recognisable as a computer.
+                // No preview yet: the placeholder gradient (the view's own
+                // background) and one faint icon at its natural size in the
+                // middle. CENTER, not the CENTER_CROP a preview uses: cropping
+                // the glyph to fill the band leaves two bars that are not
+                // recognisable as a computer. White in both themes, because the
+                // placeholder is the same blue in both.
                 h.preview.setImageResource(R.drawable.ic_desktop);
-                h.preview.setImageTintList(ColorStateList.valueOf(
-                        MaterialColors.compositeARGBWithAlpha(
-                                MaterialColors.getColor(h.preview,
-                                        com.google.android.material.R.attr.colorOnSurface),
-                                (int) (0.20f * 255))));
+                h.preview.setImageTintList(ColorStateList.valueOf(0x59ffffff));
                 h.preview.setScaleType(ImageView.ScaleType.CENTER);
             }
 
             // The only thing on a card about the current state rather than the
             // saved connection. Tinted here rather than in the drawable so it
-            // uses the theme's accent with the device's dynamic colours, and so
+            // uses the theme's accent, and so
             // the other two badges keep sharing one drawable.
             final Session live = Sessions.byKey(Sessions.keyFor(c.id()));
             if (live != null && live.alive()) {
@@ -629,28 +623,19 @@ public final class HomeActivity extends AppCompatActivity {
         }
 
         /**
-         * A plugin card's margins, which have to suit both view modes.
-         *
-         * <p>It spans the full width in either mode, so it has to line up with
-         * both: a row is inset 16 dp with the list flush to the screen, and a
-         * card has its own 8 dp margin with the list padded by 8. The inset is
-         * therefore the group inset minus the list's padding, 16 dp either way.
-         *
-         * <p>The vertical gap is the one between two groups of rows, since a
-         * plugin card is a notice rather than a list item. Above the first and
-         * below each one, minus what the neighbour already provides: the
-         * list's own top padding, and a connection card's own margin in card
-         * mode.
+         * A plugin card's margins. It spans the full width in either mode and
+         * the list's own padding is its side inset, so only the vertical gap is
+         * set here: the one between two groups of rows above the first card and
+         * below each one, less what the neighbour already provides.
          */
         private void spaceCard(View card, int position) {
-            final int inset = getResources().getDimensionPixelSize(R.dimen.group_inset);
             final int spacing = getResources().getDimensionPixelSize(R.dimen.group_spacing);
             final int own = getResources().getDimensionPixelSize(R.dimen.card_margin);
             final ViewGroup.MarginLayoutParams lp =
                     (ViewGroup.MarginLayoutParams) card.getLayoutParams();
-            lp.setMarginStart(inset - listSidePadding());
-            lp.setMarginEnd(inset - listSidePadding());
-            lp.topMargin = position == 0 ? spacing - listTopPadding() : 0;
+            lp.setMarginStart(0);
+            lp.setMarginEnd(0);
+            lp.topMargin = position == 0 ? spacing : 0;
             lp.bottomMargin = position == cards.size() - 1 && !listView
                     ? spacing - own : spacing;
             card.setLayoutParams(lp);

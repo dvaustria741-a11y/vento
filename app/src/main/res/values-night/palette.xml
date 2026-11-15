@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    SPDX-FileCopyrightText: 2026 Patrick Gaskin
+    SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<!--
+    Dark palette, the app's default look. Values marked (ref) were sampled from
+    the reference screenshots of the Windows App connection list and Edit PC
+    form; the rest have no reference and are this file's own choice.
+-->
+<resources>
+    <color name="palette_primary">#469cf3</color>               <!-- (ref) accent -->
+    <color name="palette_on_primary">#000315</color>            <!-- (ref) avatar glyph -->
+    <color name="palette_primary_container">#15304b</color>     <!-- (ref) switch track, on -->
+    <color name="palette_on_primary_container">#bfddfb</color>
+    <color name="palette_surface">#000000</color>               <!-- (ref) page -->
+    <color name="palette_on_surface">#ffffff</color>
+    <color name="palette_on_surface_variant">#c8c8c8</color>
+    <color name="palette_container_high">#2b2b2b</color>        <!-- dialogs -->
+    <color name="palette_container_highest">#333333</color>     <!-- (ref) fields -->
+    <color name="palette_outline">#4d4d4d</color>               <!-- (ref) switch track, off -->
+    <color name="palette_outline_variant">#3d3d3d</color>       <!-- (ref) nav bar top line -->
+    <color name="palette_error">#ff99a4</color>
+    <color name="palette_on_error">#000000</color>
+    <color name="palette_switch_thumb_off">#ececec</color>      <!-- (ref) -->
+    <color name="palette_switch_track_off">#4d4d4d</color>      <!-- (ref) -->
+</resources>

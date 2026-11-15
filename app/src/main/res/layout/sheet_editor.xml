@@ -24,37 +24,49 @@
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorSurfaceContainerLow"
+    android:background="?attr/colorSurface"
     android:orientation="vertical"
     tools:ignore="Overdraw">
 
+    <!-- Close, the title and Save in one bar, as in the Windows App's Edit PC. -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:minHeight="?attr/actionBarSize"
         android:orientation="horizontal"
-        android:paddingStart="@dimen/header_inset"
+        android:paddingStart="4dp"
         android:paddingTop="@dimen/header_padding"
-        android:paddingEnd="@dimen/header_inset_button"
+        android:paddingEnd="4dp"
         android:paddingBottom="@dimen/header_padding">
+
+        <ImageButton
+            android:id="@+id/close"
+            style="@style/Widget.RemoteDesktop.HeaderIcon"
+            android:contentDescription="@string/panel_close"
+            android:src="@drawable/ic_close"
+            app:tint="?attr/colorPrimary" />
 
         <TextView
             android:id="@+id/title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
             android:layout_weight="1"
             android:ellipsize="end"
             android:maxLines="1"
             android:textAppearance="?attr/textAppearanceTitleLarge" />
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/close"
-            style="@style/Widget.RemoteDesktop.HeaderButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:contentDescription="@string/panel_close"
-            app:icon="@drawable/ic_close" />
+            android:id="@+id/save"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/editor_save"
+            android:textAllCaps="true"
+            android:textColor="?attr/colorPrimary"
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
     </LinearLayout>
 
@@ -133,7 +145,9 @@
                 android:paddingEnd="@dimen/heading_inset"
                 android:paddingBottom="@dimen/heading_padding_bottom"
                 android:text="@string/editor_options"
-                android:textAppearance="?attr/textAppearanceTitleSmall"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textSize="20sp"
+                android:textStyle="bold"
                 android:textColor="?attr/colorPrimary" />
 
             <!-- The backend's per-connection options and AppOptions, rendered by PanelOptions. -->
@@ -143,78 +157,73 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical" />
 
+
+        <!--
+            Delete, add to home screen and pin: the footer's buttons, now at
+            the end of the form so that the bar above carries only Save.
+            Pinned is still written immediately and Save's changes are not.
+        -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="12dp"
+                android:paddingTop="8dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="8dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/delete"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/home_delete"
+                    android:textColor="?attr/colorError" />
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1" />
+
+                <!--
+                    Adds the connection to the launcher's home screen. Next to the pin
+                    because both are about where the connection appears. Unlike the pin
+                    it is not a toggle: the launcher does not tell this app what is on
+                    the home screen, so the button can only request, and a toggle would
+                    show a state it cannot know.
+
+                    For the same reason it has no outline: on a toggle the outlined
+                    container fills in when on, so an outlined action would look like
+                    a switch that is always off.
+                -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/home_screen"
+                    style="@style/Widget.Material3.Button.IconButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:contentDescription="@string/editor_home_screen"
+                    app:icon="@drawable/ic_add_home" />
+
+                <!--
+                    Pinned is a state rather than an action, so the control is a toggle
+                    that shows it, not a button that inverts it. It is the other thing
+                    the editor writes, although it is written immediately and
+                    Save's changes are not.
+                -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/pin"
+                    style="@style/Widget.Material3.Button.IconButton.Outlined"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="4dp"
+                    android:checkable="true"
+                    app:icon="@drawable/ic_pin" />
+            </LinearLayout>
         </LinearLayout>
 
     </androidx.core.widget.NestedScrollView>
 
-    <com.google.android.material.divider.MaterialDivider
-        style="@style/Widget.RemoteDesktop.PanelDivider" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="12dp"
-        android:paddingTop="8dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="8dp">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/delete"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/home_delete"
-            android:textColor="?attr/colorError" />
-
-        <Space
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_weight="1" />
-
-        <!--
-            Adds the connection to the launcher's home screen. Next to the pin
-            because both are about where the connection appears. Unlike the pin
-            it is not a toggle: the launcher does not tell this app what is on
-            the home screen, so the button can only request, and a toggle would
-            show a state it cannot know.
-
-            For the same reason it has no outline: on a toggle the outlined
-            container fills in when on, so an outlined action would look like
-            a switch that is always off.
-        -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/home_screen"
-            style="@style/Widget.Material3.Button.IconButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:contentDescription="@string/editor_home_screen"
-            app:icon="@drawable/ic_add_home" />
-
-        <!--
-            Pinned is a state rather than an action, so the control is a toggle
-            that shows it, not a button that inverts it. Beside Save because it
-            is the other thing the editor writes, although it is written
-            immediately and Save's changes are not.
-        -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/pin"
-            style="@style/Widget.Material3.Button.IconButton.Outlined"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:checkable="true"
-            app:icon="@drawable/ic_pin" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/save"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/editor_save" />
-
-    </LinearLayout>
 
 </LinearLayout>

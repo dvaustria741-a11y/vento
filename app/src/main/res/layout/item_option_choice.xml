@@ -29,7 +29,7 @@
     <com.google.android.material.button.MaterialButton
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/value"
-        style="@style/Widget.Material3.Button.TextButton.Icon"
+        style="@style/Widget.RemoteDesktop.Button.Dropdown"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"

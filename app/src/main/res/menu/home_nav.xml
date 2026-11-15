@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    SPDX-FileCopyrightText: 2026 Patrick Gaskin
+    SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<!--
+    The bottom bar. Favorites is the pinned connections and Devices is all of
+    them. Settings opens the settings screen and does not stay selected; there
+    is no third list for it to show.
+-->
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_favorites"
+        android:icon="@drawable/ic_star"
+        android:title="@string/home_nav_favorites" />
+    <item
+        android:id="@+id/nav_devices"
+        android:icon="@drawable/ic_desktop"
+        android:title="@string/home_nav_devices" />
+    <item
+        android:id="@+id/nav_settings"
+        android:icon="@drawable/ic_settings"
+        android:title="@string/home_settings" />
+</menu>

@@ -5,25 +5,21 @@ package net.pgaskin.remotedesktop;
 
 import android.app.Application;
 
-import com.google.android.material.color.DynamicColors;
-
 import net.pgaskin.remotedesktop.backend.Backends;
 
 /**
- * Applies Material You: every activity gets the system palette.
+ * The application: starts the backends and publishes the launcher shortcuts.
  *
- * <p>minSdk 31 is the API 31 minimum for
- * {@code android.R.color.system_accent1_*}, so there is no fallback path. The
- * session screen does not use the palette: it draws over a remote desktop,
- * where the phone's accent colour does not belong.
+ * <p>Every activity uses the fixed palette in the theme rather than the
+ * system's Material You colours. They are not applied here any more: the
+ * dynamic palette is a theme overlay set per activity, and it would replace
+ * the palette's colour roles.
  */
 public final class RemoteDesktopApp extends Application {
 
     @Override
     public void onCreate() {
         super.onCreate();
-        DynamicColors.applyToActivitiesIfAvailable(this);
-
         // Before anything queries the available backends, and here rather than
         // in an activity because the service is an entry point too.
         Backends.discover(this);

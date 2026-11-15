@@ -39,7 +39,7 @@
         android:layout_width="76dp"
         android:layout_height="64dp"
         android:layout_marginEnd="12dp"
-        android:background="?attr/colorSurfaceContainerHigh"
+        android:background="@drawable/bg_preview_placeholder"
         android:contentDescription="@null"
         android:scaleType="centerCrop"
         app:shapeAppearanceOverlay="@style/ShapeAppearance.RemoteDesktop.Thumbnail" />

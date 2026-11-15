@@ -3,30 +3,61 @@
     SPDX-FileCopyrightText: 2026 Patrick Gaskin
     SPDX-License-Identifier: GPL-3.0-or-later
 
-    Material You, which needs no fallback with minSdk 31: the dynamic palette
-    exists since API 31. RemoteDesktopApp applies the colours per activity;
-    this is the rest of the theme.
+    A fixed palette in the style of the Windows App (values/palette.xml and
+    values-night/palette.xml), not Material You. The dynamic palette is applied
+    per activity as a theme overlay and would replace every colour role set
+    here, so RemoteDesktopApp no longer applies it.
 -->
 <resources>
 
     <style name="Theme.RemoteDesktop" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- The action bar is a toolbar in the layout, over a transparent
-             system bar, so the home screen's cards scroll under the clock. -->
+        <!-- The header and the bottom bar draw under the system bars, so the
+             bars are transparent. -->
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">?attr/isLightTheme</item>
-        <!--
-            The background behind groups of rows, two steps up from the plain
-            surface of a Material 3 window: the system Settings app puts its
-            containers on tone 9, and this matches it.
 
-            Set on the window rather than `colorBackground`, which cannot be set
-            here: the dynamic palette is applied as a theme overlay on top of
-            this one and sets that attribute itself. Code that needs the page
-            colour uses the colorSurfaceContainer role.
-        -->
-        <item name="android:windowBackground">?attr/colorSurfaceContainer</item>
+        <item name="colorPrimary">@color/palette_primary</item>
+        <item name="colorOnPrimary">@color/palette_on_primary</item>
+        <item name="colorPrimaryContainer">@color/palette_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/palette_on_primary_container</item>
+        <item name="colorSecondary">@color/palette_primary</item>
+        <item name="colorOnSecondary">@color/palette_on_primary</item>
+        <item name="colorSecondaryContainer">@color/palette_container_highest</item>
+        <item name="colorOnSecondaryContainer">@color/palette_on_surface</item>
+        <item name="colorTertiary">@color/palette_primary</item>
+        <item name="colorOnTertiary">@color/palette_on_primary</item>
+        <item name="colorTertiaryContainer">@color/palette_primary_container</item>
+        <item name="colorOnTertiaryContainer">@color/palette_on_primary_container</item>
+        <item name="colorError">@color/palette_error</item>
+        <item name="colorOnError">@color/palette_on_error</item>
+
+        <item name="android:colorBackground">@color/palette_surface</item>
+        <item name="colorOnBackground">@color/palette_on_surface</item>
+        <item name="colorSurface">@color/palette_surface</item>
+        <item name="colorOnSurface">@color/palette_on_surface</item>
+        <item name="colorSurfaceVariant">@color/palette_container_highest</item>
+        <item name="colorOnSurfaceVariant">@color/palette_on_surface_variant</item>
+        <item name="colorSurfaceInverse">@color/palette_on_surface</item>
+        <item name="colorOnSurfaceInverse">@color/palette_surface</item>
+        <item name="colorSurfaceTint">@android:color/transparent</item>
+        <item name="colorOutline">@color/palette_outline</item>
+        <item name="colorOutlineVariant">@color/palette_outline_variant</item>
+
+        <!-- The page is one flat colour, and only things that sit on it (a
+             dialog, a field, a thumbnail) are a step lighter. -->
+        <item name="colorSurfaceDim">@color/palette_surface</item>
+        <item name="colorSurfaceBright">@color/palette_container_high</item>
+        <item name="colorSurfaceContainerLowest">@color/palette_surface</item>
+        <item name="colorSurfaceContainerLow">@color/palette_surface</item>
+        <item name="colorSurfaceContainer">@color/palette_surface</item>
+        <item name="colorSurfaceContainerHigh">@color/palette_container_high</item>
+        <item name="colorSurfaceContainerHighest">@color/palette_container_highest</item>
+
+        <item name="android:windowBackground">?attr/colorSurface</item>
         <item name="preferenceTheme">@style/PreferenceThemeOverlay.RemoteDesktop</item>
+        <item name="materialSwitchStyle">@style/Widget.RemoteDesktop.Switch</item>
+        <item name="bottomNavigationStyle">@style/Widget.RemoteDesktop.BottomNav</item>
     </style>
 
     <!--
@@ -129,13 +160,13 @@
         the rest of this is ignored and the layout's match_parent means the
         height of its own content.
 
-        The palette comes from the parent because a dialog does not inherit the
-        activity's: `applyToActivitiesIfAvailable` overlays the activity's
-        theme object, and a dialog built with its own theme starts from that
-        resource instead, which leaves it in Material 3's default purple.
+        The palette comes from the parent, Theme.RemoteDesktop, because a dialog
+        does not inherit the activity's theme and starts from its own resource.
+        The parent used to be the dynamic-colour theme, which kept the dialog in
+        step with the activity palette; both are fixed now.
     -->
     <style name="Theme.RemoteDesktop.EditorDialog"
-        parent="Theme.Material3.DynamicColors.DayNight.NoActionBar">
+        parent="Theme.RemoteDesktop">
         <item name="android:windowIsFloating">false</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
@@ -198,6 +229,69 @@
         <item name="android:layout_marginTop">4dp</item>
         <item name="android:layout_marginBottom">4dp</item>
         <item name="android:background">?attr/colorOutlineVariant</item>
+    </style>
+
+
+    <!-- A value box on a flat row: the choice rows' button. Squarer than a
+         tonal button, with the fields' fill, like the Windows App's dropdowns. -->
+    <style name="ShapeAppearance.RemoteDesktop.Field" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">4dp</item>
+    </style>
+
+    <style name="Widget.RemoteDesktop.Button.Dropdown"
+        parent="Widget.Material3.Button.TonalButton.Icon">
+        <item name="backgroundTint">?attr/colorSurfaceContainerHighest</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="iconTint">?attr/colorOnSurface</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.RemoteDesktop.Field</item>
+    </style>
+
+    <!-- A text field as a filled grey box with no outline and no underline at
+         rest; the accent shows as an underline while it has focus. -->
+    <style name="Widget.RemoteDesktop.TextInputLayout"
+        parent="Widget.Material3.TextInputLayout.FilledBox">
+        <item name="boxBackgroundColor">?attr/colorSurfaceContainerHighest</item>
+        <item name="boxCornerRadiusTopStart">4dp</item>
+        <item name="boxCornerRadiusTopEnd">4dp</item>
+        <item name="boxCornerRadiusBottomStart">4dp</item>
+        <item name="boxCornerRadiusBottomEnd">4dp</item>
+        <item name="boxStrokeWidth">0dp</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+    </style>
+
+    <!-- Blue thumb on a dark-blue track when on, a light thumb on a grey track
+         when off, and no outline either way. -->
+    <style name="Widget.RemoteDesktop.Switch" parent="Widget.Material3.CompoundButton.MaterialSwitch">
+        <item name="thumbTint">@color/switch_thumb</item>
+        <item name="trackTint">@color/switch_track</item>
+        <item name="trackDecorationTint">@android:color/transparent</item>
+    </style>
+
+    <!-- The bottom bar: flat on the page, with no pill behind the selected
+         item; the accent colour on the icon and label is the only marker. -->
+    <style name="Widget.RemoteDesktop.BottomNav" parent="Widget.Material3.BottomNavigationView">
+        <item name="backgroundTint">?attr/colorSurface</item>
+        <item name="android:background">?attr/colorSurface</item>
+        <item name="elevation">0dp</item>
+        <item name="labelVisibilityMode">labeled</item>
+        <item name="itemIconTint">@color/nav_item</item>
+        <item name="itemTextColor">@color/nav_item</item>
+        <item name="itemActiveIndicatorStyle">@style/Widget.RemoteDesktop.NavIndicator</item>
+    </style>
+
+    <style name="Widget.RemoteDesktop.NavIndicator"
+        parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">@android:color/transparent</item>
+    </style>
+
+    <!-- A bare icon in a header (close, add, reorder, view mode). -->
+    <style name="Widget.RemoteDesktop.HeaderIcon" parent="">
+        <item name="android:layout_width">48dp</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:background">?attr/selectableItemBackgroundBorderless</item>
+        <item name="android:scaleType">center</item>
+        <item name="tint">?attr/colorOnSurface</item>
     </style>
 
 </resources>

@@ -12,6 +12,14 @@
     <string name="home_empty">Press the + button to add a connection.</string>
     <string name="home_empty_playground">Try the controls in the playground</string>
     <string name="home_add">Add connection</string>
+    <string name="home_title">Devices</string>
+    <string name="home_section_devices">PC Connections</string>
+    <string name="home_section_favorites">Favorites</string>
+    <string name="home_section_toggle">Show or hide the list</string>
+    <string name="home_nav_favorites">Favorites</string>
+    <string name="home_nav_devices">Devices</string>
+    <string name="home_empty_favorites_title">No favorites</string>
+    <string name="home_empty_favorites">Pin a connection in its editor to see it here.</string>
     <string name="home_settings">Settings</string>
     <string name="home_view_list">List view</string>
     <string name="home_view_grid">Grid view</string>

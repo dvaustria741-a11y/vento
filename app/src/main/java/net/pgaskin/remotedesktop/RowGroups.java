@@ -116,7 +116,12 @@ final class RowGroups {
         if (lp == null) {
             return;
         }
-        final int inset = view.getResources().getDimensionPixelSize(R.dimen.group_inset);
+        // A field is its own box, so it takes the row padding that a row's
+        // content has inside its own background, not the group's inset (zero
+        // now that rows are flat), or its edges would not line up with the
+        // text of the rows around it.
+        final int inset = view.getResources().getDimensionPixelSize(
+                view instanceof TextInputLayout ? R.dimen.row_padding : R.dimen.group_inset);
         lp.setMarginStart(inset);
         lp.setMarginEnd(inset);
         lp.bottomMargin = gapBelow;

@@ -3,9 +3,10 @@
     SPDX-FileCopyrightText: 2026 Patrick Gaskin
     SPDX-License-Identifier: GPL-3.0-or-later
 
-    A group of rows: contiguous rows on a container with large corners, as the
-    system Settings app has used for several versions. androidx.preference does
-    not provide it.
+    A group of rows. These were once a container with large corners measured
+    from the system Settings app; the app now draws flat rows on the page, in
+    the style of the Windows App, so the radii, inset and gap are zero. They
+    stay as dimensions because RowGroups and the layouts still read them.
 
     Measured from a Pixel 8's Settings at 365 dpi, since there is no published
     spec: the radii by fitting a circle to the corner's alpha profile, the rest
@@ -15,11 +16,11 @@
 -->
 <resources>
 
-    <dimen name="group_radius">16dp</dimen>
-    <dimen name="group_radius_inner">4dp</dimen>
-    <dimen name="group_inset">16dp</dimen>
-    <dimen name="group_gap">2dp</dimen>
-    <dimen name="group_spacing">20dp</dimen>
+    <dimen name="group_radius">0dp</dimen>
+    <dimen name="group_radius_inner">0dp</dimen>
+    <dimen name="group_inset">0dp</dimen>
+    <dimen name="group_gap">0dp</dimen>
+    <dimen name="group_spacing">8dp</dimen>
     <!-- Either side of a row that is its own container: a text field's box
          has no card behind it, and a 2 dp gap next to one looks like an error. -->
     <dimen name="group_gap_field">8dp</dimen>
@@ -52,5 +53,11 @@
     <dimen name="heading_inset">24dp</dimen>
     <dimen name="heading_padding_top">24dp</dimen>
     <dimen name="heading_padding_bottom">12dp</dimen>
+
+
+    <!-- The windows-app look: rows are flat and full width on the page, so the
+         group dimensions above are zero and a card carries the only rounding. -->
+    <dimen name="home_inset">16dp</dimen>
+    <dimen name="card_radius">16dp</dimen>
 
 </resources>
