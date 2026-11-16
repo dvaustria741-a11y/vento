@@ -58,7 +58,7 @@ public final class AppSettings {
         m.put(KEY_HUD, false);
         m.put(KEY_KEEP_AWAKE, true);
         m.put(KEY_IMMERSIVE, true);
-        m.put(KEY_PRIVATE_IME, true);
+        m.put(KEY_PRIVATE_IME, false);
         m.put(KEY_PREVIEWS, true);
         m.put(KEY_LIST_VIEW, true);
         m.put(KEY_MODIFIER_RESETS_IME, true);
@@ -112,9 +112,10 @@ public final class AppSettings {
     }
 
     /**
-     * On by default: text typed into a remote machine is as likely to be a
-     * secret as text typed into a field here, and there is no way to mark only
-     * part of a desktop, so the whole desktop is treated as a password field.
+     * Off by default, so the keyboard's suggestion strip shows. Text typed into
+     * a remote machine is as likely to be a secret as text typed into a field
+     * here, and there is no way to mark only part of a desktop, so turning this
+     * on treats the whole desktop as a password field.
      */
     public static boolean privateIme(Context ctx) {
         return get(ctx, KEY_PRIVATE_IME);

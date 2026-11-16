@@ -880,22 +880,21 @@ public final class SessionView extends View implements ZoomSink, CursorControlle
     }
 
     /**
-     * {@code TYPE_NULL} with no extract UI: there is no text field here, only a
-     * remote machine to send keys to, and declaring that makes an IME send key
-     * events rather than editing a document.
+     * A plain text field with no extract UI, so the keyboard shows its
+     * suggestion strip. {@link TextInput} types composing text as a difference
+     * against what was sent, so a picked suggestion corrects the remote machine.
      *
-     * <p>With the private IME preference on, a password field instead.
-     * {@code TYPE_NULL} does not stop a keyboard from learning the words,
-     * suggesting them, or uploading them to improve itself, and since this
-     * field covers the whole remote machine, a password typed into it looks
-     * like any other text. Part of it cannot be marked, so all of it is.
+     * <p>With the private IME preference on, a password field instead, which
+     * turns suggestions, auto-correction and learning off. This field covers
+     * the whole remote machine, so a password typed into it looks like any
+     * other text. Part of it cannot be marked, so all of it is.
      */
     @Override
     public InputConnection onCreateInputConnection(EditorInfo out) {
         final boolean privateIme = AppSettings.privateIme(getContext());
         out.inputType = privateIme
                 ? InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD
-                : InputType.TYPE_NULL;
+                : InputType.TYPE_CLASS_TEXT;
         out.imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI
                 | EditorInfo.IME_FLAG_NO_FULLSCREEN
                 | EditorInfo.IME_ACTION_NONE
