@@ -63,6 +63,14 @@ pub static FREERDP: About = About {
 ///   depth** (the codec decides the cost of a pixel before it reaches the
 ///   framebuffer, which is 32 bits either way).
 pub static OPTIONS: &[Spec] = &[
+    bool(
+        "Optimizer",
+        "Optimizer",
+        "Low-latency preset. While on, it replaces Graphics (EGFX), Visual effects (Limited), Desktop size (1280 × 800) and Compression (on) with those values, whatever those rows say. Nothing else changes. Applied when the connection starts.",
+        false,
+        Scope::Connection,
+        false,
+    ),
     choices(
         "Nla",
         "NLA",
@@ -185,6 +193,7 @@ mod tests {
         assert_eq!(
             keys,
             [
+                "Optimizer",
                 "Nla",
                 "LegacyTls",
                 "DesktopSize",

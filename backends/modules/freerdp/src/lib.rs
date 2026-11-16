@@ -14,7 +14,7 @@
 
 use api::c::{Behaviour, CSession, start};
 use api::backend::{Backend, ConnectionFact, Field, Traffic};
-use api::rdp::{desktop_size, monitor_count};
+use api::rdp::{desktop_size, monitor_count, with_optimizer};
 use api::kind::{CONNECT_TIMEOUT_MS, Connect, Kind, Platform};
 use api::options::Options;
 use std::ffi::CString;
@@ -76,7 +76,11 @@ fn scale(o: &Options) -> i32 {
 }
 
 fn create(c: &Connect) -> Result<std::sync::Arc<dyn Backend>, String> {
-    let o = c.options;
+    let tuned = with_optimizer(c.options);
+    let o = &tuned;
+    if o.bool("Optimizer") {
+        log::info!("optimizer on: Graphics=gfx, Experience=plain, DesktopSize=1280x800, Compression=true");
+    }
     let (domain, user) = c.domain_and_user();
     let (width, height) = desktop_size(o.get("DesktopSize"), c.screen, c.last_size);
     // The library sets up a certificate store here at connect and fails to
